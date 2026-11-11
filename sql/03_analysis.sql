@@ -1,7 +1,3 @@
--- ============================================
--- Olist E-Commerce SQL Analysis
--- ============================================
-
 -- Q1: Total product revenue
 SELECT SUM(price) AS total_revenue
 FROM olist.order_items;
@@ -25,3 +21,20 @@ LEFT JOIN olist.product_category_name_translation t
 GROUP BY category
 ORDER BY revenue DESC
 LIMIT 10;
+
+-- Q4: Orders by customer state
+SELECT
+    c.customer_state,
+    COUNT(*) AS total_orders
+FROM olist.orders o
+JOIN olist.customers c ON o.customer_id = c.customer_id
+GROUP BY c.customer_state
+ORDER BY total_orders DESC
+LIMIT 5;
+
+-- Q5: Average delivery time (delivered orders only)
+SELECT
+    ROUND(AVG(DATEDIFF(order_delivered_customer_date, order_purchase_timestamp)), 1) AS avg_delivery_days,
+    COUNT(*) AS orders_counted
+FROM olist.orders
+WHERE order_delivered_customer_date IS NOT NULL;
