@@ -38,3 +38,35 @@ SELECT
     COUNT(*) AS orders_counted
 FROM olist.orders
 WHERE order_delivered_customer_date IS NOT NULL;
+
+-- Q6: Do late deliveries get worse reviews?
+SELECT
+    CASE
+        WHEN o.order_delivered_customer_date > o.order_estimated_delivery_date THEN 'Late'
+        ELSE 'On time'
+    END AS delivery_status,
+    COUNT(*) AS reviews,
+    ROUND(AVG(r.review_score), 2) AS avg_review_score
+FROM olist.orders o
+JOIN olist.order_reviews r ON o.order_id = r.order_id
+WHERE o.order_delivered_customer_date IS NOT NULL
+GROUP BY delivery_status;
+
+-- Q7: Top 3 sellers by revenue within each state
+SELECT seller_state, seller_id, revenue, state_rank
+FROM (
+    SELECT
+        s.seller_state,
+        s.seller_id,
+        ROUND(SUM(oi.price), 2) AS revenue,
+        RANK() OVER (
+            PARTITION BY s.seller_state
+            ORDER BY SUM(oi.price) DESC
+        ) AS state_rank
+    FROM olist.order_items oi
+    JOIN olist.sellers s ON oi.seller_id = s.seller_id
+    GROUP BY s.seller_state, s.seller_id
+) ranked
+WHERE state_rank <= 3
+ORDER BY seller_state, state_rank;
+
